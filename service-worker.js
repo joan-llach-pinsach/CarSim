@@ -1,16 +1,24 @@
-const CACHE_NAME = 'car-sim-v1';
+const CACHE_NAME = 'car-sim-v2';
+
+// Use relative paths for GitHub Pages compatibility
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/css/styles.css',
-  '/js/app.js',
-  '/js/carModel.js',
-  '/js/physics.js',
-  '/js/fileUtils.js',
-  '/js/tabs/carSpecsTab.js',
-  '/js/tabs/transmissionTab.js',
-  '/js/tabs/simulationTab.js',
-  '/manifest.json',
+  './',
+  './index.html',
+  './css/styles.css',
+  './js/app.js',
+  './js/carModel.js',
+  './js/physics.js',
+  './js/fileUtils.js',
+  './js/tabs/carSpecsTab.js',
+  './js/tabs/transmissionTab.js',
+  './js/tabs/simulationTab.js',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
+];
+
+// External resources to cache separately (may fail, that's ok)
+const EXTERNAL_ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js'
 ];
 
@@ -18,9 +26,18 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log('Caching app assets');
-        return cache.addAll(ASSETS_TO_CACHE);
+        // Cache local assets first
+        await cache.addAll(ASSETS_TO_CACHE);
+        // Try to cache external assets, but don't fail if they're unavailable
+        for (const url of EXTERNAL_ASSETS) {
+          try {
+            await cache.add(url);
+          } catch (e) {
+            console.log('Could not cache external asset:', url);
+          }
+        }
       })
       .then(() => {
         // Force the waiting service worker to become active
@@ -76,12 +93,20 @@ self.addEventListener('fetch', (event) => {
             return networkResponse;
           })
           .catch(() => {
-            // If both cache and network fail, return a fallback
-            if (event.request.destination === 'document') {
-              return caches.match('/index.html');
+            // If both cache and network fail, return a fallback for navigation
+            if (event.request.mode === 'navigate') {
+              return caches.match('./index.html');
             }
+            return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
           });
       })
   );
+});
+
+// Handle messages from the main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
