@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>Right-click each image and "Save image as..." to the icons folder:</p>
+    
+    <h3>icon-192.png (192x192)</h3>
+    <canvas id="icon192" width="192" height="192"></canvas>
+    
+    <h3>icon-512.png (512x512)</h3>
+    <canvas id="icon512" width="512" height="512"></canvas>
+    
+    <script>
+        function drawIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const center = size / 2;
+            
+            // Background - dark blue gradient
+            const gradient = ctx.createRadialGradient(center, center, 0, center, center, size * 0.7);
+            gradient.addColorStop(0, '#1e3a5f');
+            gradient.addColorStop(1, '#16213e');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.15);
+            ctx.fill();
+            
+            // Draw speedometer arc
+            const arcRadius = size * 0.35;
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = size * 0.04;
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            ctx.arc(center, center + size * 0.1, arcRadius, Math.PI * 1.1, Math.PI * 1.9);
+            ctx.stroke();
+            
+            // Draw speed marks
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = size * 0.02;
+            for (let i = 0; i <= 8; i++) {
+                const angle = Math.PI * 1.1 + (Math.PI * 0.8 / 8) * i;
+                const innerR = arcRadius - size * 0.05;
+                const outerR = arcRadius + size * 0.03;
+                ctx.beginPath();
+                ctx.moveTo(center + Math.cos(angle) * innerR, center + size * 0.1 + Math.sin(angle) * innerR);
+                ctx.lineTo(center + Math.cos(angle) * outerR, center + size * 0.1 + Math.sin(angle) * outerR);
+                ctx.stroke();
+            }
+            
+            // Draw needle
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = size * 0.03;
+            const needleAngle = Math.PI * 1.6;
+            ctx.beginPath();
+            ctx.moveTo(center, center + size * 0.1);
+            ctx.lineTo(
+                center + Math.cos(needleAngle) * arcRadius * 0.85,
+                center + size * 0.1 + Math.sin(needleAngle) * arcRadius * 0.85
+            );
+            ctx.stroke();
+            
+            // Center dot
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(center, center + size * 0.1, size * 0.04, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Text "CAR" at top
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${size * 0.12}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('CAR', center, size * 0.25);
+            
+            // Text "SIM" at bottom
+            ctx.font = `bold ${size * 0.08}px Arial`;
+            ctx.fillText('SIM', center, size * 0.85);
+        }
+        
+        drawIcon(document.getElementById('icon192'));
+        drawIcon(document.getElementById('icon512'));
+        
+        // Convert to downloadable images
+        document.querySelectorAll('canvas').forEach(canvas => {
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png');
+            img.style.display = 'block';
+            img.style.marginBottom = '20px';
+            img.style.border = '1px solid #ccc';
+            canvas.parentNode.replaceChild(img, canvas);
+        });
+    </script>
+</body>
+</html>
+
